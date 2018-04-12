@@ -37,6 +37,10 @@ def update_reputee_dict(posted):
     rid_value = posted['repute']['value']
     updating_reputee_dict(reputee, feature, rid, rid_value)
 
+def load_reputee():
+    with open(pickleDB, 'rb') as f:
+        return pickle.load(f)
+
 def updating_reputee_dict(a,b,c,d):
     #this function receives the parsed data and updates the dictionary database
     # updating_reputee_dict(reputee, feature, rid, rid_value)
@@ -106,10 +110,22 @@ data_dict = {"hello client": "This is the new GET; Here is your info"}
 class Reputee_Scores(object):
 
     def on_get(self, req, resp):
-        gdoc = data_dict
         # creating a JSON string representation of the gdoc Resource
         # resp.body is a python object that specifies the JSON response to client
-        resp.body = json.dumps(gdoc, ensure_ascii=False)
+        output = {}
+        ## check for get params
+        name = req.params.get('name', False)
+        if name:
+            reputee = load_reputee()
+            user_reputee = reputee.get(name, False)
+            if user_reputee:
+                output = user_reputee
+            else:
+                output = {'message':'No such name'}
+        else:
+            output = data_dict
+            
+        resp.body = json.dumps(output, ensure_ascii=False)
         resp.status = falcon.HTTP_200
 
     def on_post(self, req, resp):
